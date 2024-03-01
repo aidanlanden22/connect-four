@@ -24,6 +24,7 @@ function GameBoard() {
   };
 
   const checkForWinner = (row, column, playerId) => {
+    console.log(row, column, playerId);
     let winningMove = [];
     let currentSequence = [{ row, column }];
     // Check vertical downwards
@@ -55,11 +56,11 @@ function GameBoard() {
     currentSequence.length = 1;
 
     //Check down right and up right
-    for (let i = row + 1, j = column - 1; i < rows, j >= 0; i++, j--) {
+    for (let i = row + 1, j = column - 1; i < rows && j >= 0; i++, j--) {
       if (boardState[i][j] === playerId) currentSequence.push({ i, j });
       else break;
     }
-    for (let i = row - 1, j = column + 1; i >= 0, j < columns; i--, j++) {
+    for (let i = row - 1, j = column + 1; i >= 0 && j < columns; i--, j++) {
       if (boardState[i][j] === playerId) currentSequence.push({ i, j });
       else break;
     }
@@ -68,11 +69,11 @@ function GameBoard() {
     currentSequence.length = 1;
 
     //check up left and down left
-    for (let i = row - 1, j = column - 1; i >= 0, j >= 0; i--, j--) {
+    for (let i = row - 1, j = column - 1; i >= 0 && j >= 0; i--, j--) {
       if (boardState[i][j] === playerId) currentSequence.push({ i, j });
       else break;
     }
-    for (let i = row + 1, j = column + 1; i < rows, j < columns; i++, j++) {
+    for (let i = row + 1, j = column + 1; i < rows && j < columns; i++, j++) {
       if (boardState[i][j] === playerId) currentSequence.push({ i, j });
       else break;
     }
@@ -87,16 +88,16 @@ function GameBoard() {
 }
 
 /*function Player(name) {
-  let id = name;
-  let isActive = false;
-  const takeTurn = (game, column) => {
-    game.dropPiece(column, id);
-
-    console.log(game.getState());
-  };
-
-  return { takeTurn, getId: () => id };
-}*/
+    let id = name;
+    let isActive = false;
+    const takeTurn = (game, column) => {
+      game.dropPiece(column, id);
+  
+      console.log(game.getState());
+    };
+  
+    return { takeTurn, getId: () => id };
+  }*/
 
 function Game(board) {
   const gameBoard = board;
@@ -109,8 +110,9 @@ function Game(board) {
   };
 
   const takeTurn = (column) => {
-    gameBoard.dropPiece(column, activePlayer.id);
+    const row = gameBoard.dropPiece(column, activePlayer.id);
     switchPlayerTurn();
+    return row;
   };
 
   const switchPlayerTurn = () =>
@@ -119,4 +121,16 @@ function Game(board) {
   return { getActivePlayer, takeTurn };
 }
 
-export default { GameBoard, Game };
+let gameBoard = GameBoard();
+let currentGame = Game(gameBoard);
+
+let headers = document.querySelectorAll(".column-header");
+
+for (const [i, header] of headers.entries()) {
+  console.log(i);
+  header.addEventListener("click", () => {
+    const row = currentGame.takeTurn(i);
+    const cells = header.nextElementSibling.querySelectorAll(".cell");
+    cells[row].style.backgroundColor = "red";
+  });
+}
