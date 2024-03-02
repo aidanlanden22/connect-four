@@ -3,12 +3,17 @@ function GameBoard() {
   const rows = 6;
   const columns = 7;
   let boardState = [];
-  for (let i = 0; i < rows; i++) {
-    boardState[i] = [];
-    for (let j = 0; j < columns; j++) {
-      boardState[i][j] = 0;
+
+  const initializeBoard = () => {
+    for (let i = 0; i < rows; i++) {
+      boardState[i] = [];
+      for (let j = 0; j < columns; j++) {
+        boardState[i][j] = 0;
+      }
     }
-  }
+  };
+
+  initializeBoard();
 
   const dropPiece = (column, player) => {
     let row;
@@ -30,7 +35,7 @@ function GameBoard() {
     // Check vertical downwards
     for (let i = row - 1; i >= 0; i--) {
       if (boardState[i][column] === playerId)
-        currentSequence.push({ i, column });
+        currentSequence.push({ row: i, column });
       else break;
     }
 
@@ -41,7 +46,8 @@ function GameBoard() {
 
     // Check horizontal left
     for (let i = column - 1; i >= 0; i--) {
-      if (boardState[row][i] === playerId) currentSequence.push({ row, i });
+      if (boardState[row][i] === playerId)
+        currentSequence.push({ row, column: i });
       else break;
     }
 
@@ -58,11 +64,13 @@ function GameBoard() {
 
     //Check down right and up right
     for (let i = row + 1, j = column - 1; i < rows && j >= 0; i++, j--) {
-      if (boardState[i][j] === playerId) currentSequence.push({ i, j });
+      if (boardState[i][j] === playerId)
+        currentSequence.push({ row: i, column: j });
       else break;
     }
     for (let i = row - 1, j = column + 1; i >= 0 && j < columns; i--, j++) {
-      if (boardState[i][j] === playerId) currentSequence.push({ i, j });
+      if (boardState[i][j] === playerId)
+        currentSequence.push({ row: i, column: j });
       else break;
     }
 
@@ -71,11 +79,13 @@ function GameBoard() {
 
     //check up left and down left
     for (let i = row - 1, j = column - 1; i >= 0 && j >= 0; i--, j--) {
-      if (boardState[i][j] === playerId) currentSequence.push({ i, j });
+      if (boardState[i][j] === playerId)
+        currentSequence.push({ row: i, column: j });
       else break;
     }
     for (let i = row + 1, j = column + 1; i < rows && j < columns; i++, j++) {
-      if (boardState[i][j] === playerId) currentSequence.push({ i, j });
+      if (boardState[i][j] === playerId)
+        currentSequence.push({ row: i, column: j });
       else break;
     }
 
@@ -85,7 +95,7 @@ function GameBoard() {
 
   const getState = () => console.log(boardState);
 
-  return { dropPiece, getState, getBoard: () => boardState };
+  return { dropPiece, getState, initializeBoard };
 }
 
 function Game(board) {
@@ -117,6 +127,7 @@ let board = document.querySelector(".game-board");
 let headers = board.querySelectorAll(".column-header");
 let columns = board.querySelectorAll(".column");
 let winnerMessage = document.querySelector(".winner-message");
+let restartButton = document.querySelector(".restart");
 
 for (const [i, header] of headers.entries()) {
   header.addEventListener("click", () => {
@@ -135,6 +146,21 @@ for (const [i, header] of headers.entries()) {
   });
 }
 
+restartButton.addEventListener("click", () => {
+  gameBoard.initializeBoard();
+  currentGame = Game(gameBoard);
+  resetBoard();
+  winnerMessage.classList.remove("show");
+});
+
+const resetBoard = () => {
+  for (column of columns) {
+    const cells = column.querySelectorAll(".cell");
+    for (cell of cells) {
+      cell.style.backgroundColor = "white";
+    }
+  }
+};
 const highlightWinner = (winningMove) => {
   for (sequence of winningMove) {
     for (move of sequence) {
