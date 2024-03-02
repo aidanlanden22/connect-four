@@ -12,19 +12,19 @@ function GameBoard() {
 
   const dropPiece = (column, player) => {
     let row;
+    let winningMove;
     for (let i = rows - 1; i >= 0; i--) {
       if (boardState[i][column] === 0) {
         boardState[i][column] = player;
         row = i;
-        checkForWinner(i, column, player);
+        winningMove = checkForWinner(i, column, player);
         break;
       }
     }
-    return row;
+    return { row, winningMove };
   };
 
   const checkForWinner = (row, column, playerId) => {
-    console.log(row, column, playerId);
     let winningMove = [];
     let currentSequence = [{ row, column }];
     // Check vertical downwards
@@ -35,7 +35,7 @@ function GameBoard() {
     }
 
     // If 4 or more, add winning move
-    if (currentSequence.length >= 4) winningMove.push(currentSequence);
+    if (currentSequence.length >= 4) winningMove.push([...currentSequence]);
     // Reset current sequence to last move
     currentSequence.length = 1;
 
@@ -48,11 +48,12 @@ function GameBoard() {
     // We don't need to check or reset current sequence between left and right checks since they're continuous
     // Check horizontal right
     for (let i = column + 1; i < columns; i++) {
-      if (boardState[row][i] === playerId) currentSequence.push({ row, i });
-      else break;
+      if (boardState[row][i] === playerId) {
+        currentSequence.push({ row, column: i });
+      } else break;
     }
 
-    if (currentSequence.length >= 4) winningMove.push(currentSequence);
+    if (currentSequence.length >= 4) winningMove.push([...currentSequence]);
     currentSequence.length = 1;
 
     //Check down right and up right
@@ -65,7 +66,7 @@ function GameBoard() {
       else break;
     }
 
-    if (currentSequence.length >= 4) winningMove.push(currentSequence);
+    if (currentSequence.length >= 4) winningMove.push([...currentSequence]);
     currentSequence.length = 1;
 
     //check up left and down left
@@ -78,7 +79,7 @@ function GameBoard() {
       else break;
     }
 
-    if (currentSequence.length >= 4) winningMove.push(currentSequence);
+    if (currentSequence.length >= 4) winningMove.push([...currentSequence]);
     return winningMove;
   };
 
@@ -86,18 +87,6 @@ function GameBoard() {
 
   return { dropPiece, getState, getBoard: () => boardState };
 }
-
-/*function Player(name) {
-    let id = name;
-    let isActive = false;
-    const takeTurn = (game, column) => {
-      game.dropPiece(column, id);
-  
-      console.log(game.getState());
-    };
-  
-    return { takeTurn, getId: () => id };
-  }*/
 
 function Game(board) {
   const gameBoard = board;
@@ -110,9 +99,9 @@ function Game(board) {
   };
 
   const takeTurn = (column) => {
-    const row = gameBoard.dropPiece(column, activePlayer.id);
-    switchPlayerTurn();
-    return row;
+    const { row, winningMove } = gameBoard.dropPiece(column, activePlayer.id);
+    if (!winningMove.length) switchPlayerTurn();
+    return { row, winningMove };
   };
 
   const switchPlayerTurn = () =>
@@ -124,13 +113,37 @@ function Game(board) {
 let gameBoard = GameBoard();
 let currentGame = Game(gameBoard);
 
-let headers = document.querySelectorAll(".column-header");
+let board = document.querySelector(".game-board");
+let headers = board.querySelectorAll(".column-header");
+let columns = board.querySelectorAll(".column");
+let winnerMessage = document.querySelector(".winner-message");
 
 for (const [i, header] of headers.entries()) {
-  console.log(i);
   header.addEventListener("click", () => {
-    const row = currentGame.takeTurn(i);
+    const { row, winningMove } = currentGame.takeTurn(i);
     const cells = header.nextElementSibling.querySelectorAll(".cell");
-    cells[row].style.backgroundColor = "red";
+    cells[row].style.backgroundColor =
+      currentGame.getActivePlayer().id === 1 ? "red" : "black";
+    if (winningMove.length) highlightWinner(winningMove);
+  });
+  header.addEventListener("mouseover", () => {
+    header.style.backgroundColor =
+      currentGame.getActivePlayer().id === 2 ? "red" : "black";
+  });
+  header.addEventListener("mouseout", () => {
+    header.style.backgroundColor = "rgba(0,0,0,40%)";
   });
 }
+
+const highlightWinner = (winningMove) => {
+  for (sequence of winningMove) {
+    for (move of sequence) {
+      const cell = columns[move.column].querySelectorAll(".cell")[move.row];
+      cell.style.backgroundColor = "green";
+    }
+  }
+  let winnerText = winnerMessage.querySelector(".winner-text");
+  winnerText.innerText =
+    "Player " + currentGame.getActivePlayer().id + " wins!";
+  winnerMessage.classList.add("show");
+};
