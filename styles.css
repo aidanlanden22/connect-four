@@ -25,7 +25,6 @@ body {
 
 .column-header {
     border-radius: 9999px;
-    background-color: rgba(0,0,0,40%);
     flex: 1;
     color: white;
     display: flex;
@@ -34,26 +33,49 @@ body {
     position: relative;
     width: 7rem;
     height: 5.6rem;
-    margin: var(--marker-margin);
-    
+    margin: var(--marker-margin);   
 }
 .column-header-text {
     position: absolute;
 }
 
 .column-contents { 
+    position: relative;
     flex: 7;
-    background-color: blue;
+    background-color: #2563eb;
     display: flex;
     flex-direction: column;
+    z-index: auto;
+    overflow: hidden;
 }
 .cell {
+    position: relative;
     border-radius: 9999px;
     background-color: white;
     flex: 1;
     margin: var(--marker-margin);
     width: 7rem;
     height: 5.6rem;
+    overflow: hidden;
+}
+@keyframes fall-through {
+    0% {
+        transform: translatey(-7.5rem);
+    }
+    100% {
+        transform: translateY(7.5rem);
+    }
+}
+.animated {
+    position: absolute;
+    width: 7rem;
+    height: 7rem;
+    border-radius: 9999px;
+    background-color: green;
+    z-index: 2;
+    animation-name: fall-through;
+    animation-duration: 150ms;
+    transform: translateY(-7.5rem);
 
 }
 .winner-message {
@@ -63,7 +85,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: rgba(0,0,0,90%);
+    background-color: rgba(0,0,0,50%);
     justify-content: center;
     align-items: center;
     color: white;
