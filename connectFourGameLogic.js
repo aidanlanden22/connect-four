@@ -1,5 +1,4 @@
 function GameBoard() {
-  //inverting columns and rows to speed up next open space checks
   const rows = 6;
   const columns = 7;
   let boardState = [];
@@ -15,14 +14,14 @@ function GameBoard() {
 
   initializeBoard();
 
-  const dropPiece = (column, player) => {
+  const dropPiece = (column, playerId) => {
     let row;
     let winningMove;
     for (let i = rows - 1; i >= 0; i--) {
       if (boardState[i][column] === 0) {
-        boardState[i][column] = player;
+        boardState[i][column] = playerId;
         row = i;
-        winningMove = checkForWinner(i, column, player);
+        winningMove = checkForWinner(i, column, playerId);
         break;
       }
     }
@@ -108,16 +107,17 @@ function Game(board) {
 
   const takeTurn = (column) => {
     const { row, winningMove } = gameBoard.dropPiece(column, activePlayer.id);
-    if (!winningMove.length) switchPlayerTurn();
     return { row, winningMove };
   };
 
   const switchPlayerTurn = () =>
     (activePlayer = activePlayer === player1 ? player2 : player1);
 
-  return { getActivePlayer, getActiveColor, takeTurn };
+  return { getActivePlayer, switchPlayerTurn, takeTurn };
 }
 
+let red = "#f87171";
+let yellow = "#facc15";
 let gameBoard = GameBoard();
 let currentGame = Game(gameBoard);
 
@@ -134,12 +134,17 @@ for (const [i, column] of columns.entries()) {
     const { row, winningMove } = currentGame.takeTurn(i);
     const cells = column.querySelectorAll(".cell");
     animateMove(row, cells);
-    if (winningMove.length) showWinner(winningMove);
+    // Hacky way to wait for animation to end
+    setTimeout(() => {
+      console.log(winningMove);
+      cells[row].style.backgroundColor = currentGame.getActivePlayer().color;
+      if (winningMove.length) showWinner(winningMove);
+      currentGame.switchPlayerTurn();
+    }, 85.8 * row);
   });
 
   column.addEventListener("mouseover", () => {
-    header.style.backgroundColor =
-      currentGame.getActivePlayer().id === 2 ? red : yellow;
+    header.style.backgroundColor = currentGame.getActivePlayer().color;
   });
 
   column.addEventListener("mouseout", () => {
@@ -156,21 +161,18 @@ restartButton.addEventListener("click", () => {
 
 const animateMove = (row, cells) => {
   for (let i = 0; i < row; i++) {
+    // Each animation should be ran when the previous animation is in an acceptable state
     setTimeout(() => {
       let animated = document.createElement("div");
       animated.classList.add("animated");
-      animated.style.backgroundColor =
-        currentGame.getActivePlayer().id === 1 ? red : yellow;
+      animated.style.backgroundColor = currentGame.getActivePlayer().color;
       cells[i].appendChild(animated);
     }, 85.7 * i);
   }
-  setTimeout(() => {
-    cells[row].style.backgroundColor =
-      currentGame.getActivePlayer().id === 1 ? red : yellow;
-  }, 85.7 * row);
 };
 
 const resetBoard = () => {
+  // Reset cell state
   for (column of columns) {
     const cells = column.querySelectorAll(".cell");
     for (cell of cells) {
@@ -179,8 +181,8 @@ const resetBoard = () => {
   }
 };
 
-const getActiveColor () 
 const showWinner = (winningMove) => {
+  console.log(winningMove);
   for (sequence of winningMove) {
     for (move of sequence) {
       const cell = columns[move.column].querySelectorAll(".cell")[move.row];
